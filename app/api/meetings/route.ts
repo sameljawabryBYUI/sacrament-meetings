@@ -1,10 +1,15 @@
 import { NextResponse } from 'next/server';
-import { getMeetings } from '../../../lib/meetings-db';
+import { getMeetings } from '@/lib/meetings-db';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const date = searchParams.get('date');
-  const meetings = getMeetings(date);
+  const query = searchParams.get('query') || '';
   
-  return NextResponse.json(meetings);
+  try {
+    const meetings = await getMeetings(query);
+    return NextResponse.json(meetings);
+  } catch (error) {
+    console.error('Database error:', error);
+    return NextResponse.json({ error: 'Failed to fetch meetings from database' }, { status: 500 });
+  }
 }
