@@ -12,7 +12,9 @@ export default async function CurrentMeetingRedirect() {
   sunday.setDate(today.getDate() - dayOfWeek); 
   
   const isoDate = sunday.toISOString().split('T')[0];
-  const meetings = getMeetings(isoDate);
+  
+  // ADDED AWAIT HERE:
+  const meetings = await getMeetings(isoDate);
   
   if (meetings && meetings.length > 0) {
     redirect(`/meetings/${meetings[0].id}`);
