@@ -5,7 +5,8 @@ export default function MeetingCard({ meeting }: { meeting: SacramentMeeting }) 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-5 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-center border-b pb-3 mb-3">
-        <h2 className="text-xl font-bold text-gray-800">{new Date(meeting.date).toLocaleDateString()}</h2>
+        {/* Added 'T00:00:00' to fix the timezone date shifting bug */}
+        <h2 className="text-xl font-bold text-gray-800">{new Date(meeting.date + 'T00:00:00').toLocaleDateString()}</h2>
         <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
           {meeting.meetingType}
         </span>
