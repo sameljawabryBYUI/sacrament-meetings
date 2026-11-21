@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
+
+const emptySubscribe = () => () => {};
 
 export default function Footer() {
-  const [currentYear, setCurrentYear] = useState('');
-
-  // This tells Next.js to wait until the page loads before getting the date
-  useEffect(() => {
-    setCurrentYear(new Date().getFullYear().toString());
-  }, []);
+  const currentYear = useSyncExternalStore(
+    emptySubscribe,
+    () => new Date().getFullYear().toString(),
+    () => '2026'
+  );
 
   return (
-    <footer className="bg-gray-800 text-gray-400 p-4 text-center text-sm mt-auto">
+    <footer className="mt-auto bg-gray-900 p-4 text-center text-sm text-gray-200">
       <p>
         &copy; {currentYear} Sacrament Meeting Planner. All rights reserved.
       </p>

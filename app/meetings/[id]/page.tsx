@@ -1,49 +1,77 @@
-'use client';
-
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { connection } from 'next/server';
 import MeetingDetail from '../../../components/MeetingDetail';
-import { SacramentMeeting } from '../../../lib/types';
+import { getMeetingById } from '../../../lib/meetings-db';
 
-export default function MeetingDetailPage() {
-  const params = useParams();
-  const [meeting, setMeeting] = useState<SacramentMeeting | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+async function MeetingDetailContent({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  await connection();
+  const { id } = await params;
+  const numericId = Number(id);
 
-  useEffect(() => {
-    // Reset states when ID changes
-    setLoading(true);
-    setError(null);
+  if (!Number.isInteger(numericId) || numericId <= 0) {
+    return (
+      <div className="mx-auto mt-10 max-w-xl rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-xl font-bold text-red-700">
+          Invalid ID format (400)
+        </h1>
+        <p className="mt-2 text-gray-700">
+          The meeting ID provided is not valid.
+        </p>
+        <Link
+          href="/meetings"
+          className="mt-4 inline-block rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
+        >
+          Back to Meetings
+        </Link>
+      </div>
+    );
+  }
 
-    // Fetches the specific meeting from the API
-    fetch(`/api/meetings/${params.id}`)
-      .then(async (res) => {
-        if (!res.ok) {
-          // Check res.status to differentiate 400 vs 404 as requested
-          throw new Error(res.status === 400 ? 'Invalid ID format (400)' : 'Meeting not found (404)');
-        }
-        // Type the JSON response properly
-        return res.json() as Promise<SacramentMeeting>;
-      })
-      .then((data: SacramentMeeting) => {
-        setMeeting(data);
-      })
-      .catch((err) => {
-        setError(err.message);
-      })
-      .finally(() => {
-        setLoading(false); // Ensure loading turns off even if it fails
-      });
-  }, [params.id]);
+  const meeting = await getMeetingById(numericId);
 
-  if (loading) return <div className="text-center mt-10 text-xl text-gray-600">Loading meeting details...</div>;
-  if (error) return <div className="text-center text-red-600 mt-10 text-xl font-bold">{error}</div>;
-  if (!meeting) return null;
+  if (!meeting) {
+    return (
+      <div className="mx-auto mt-10 max-w-xl rounded-lg border border-gray-200 bg-white p-6 text-center shadow-sm">
+        <h1 className="text-xl font-bold text-red-700">
+          Meeting not found (404)
+        </h1>
+        <p className="mt-2 text-gray-700">
+          The meeting you requested could not be found.
+        </p>
+        <Link
+          href="/meetings"
+          className="mt-4 inline-block rounded-md bg-blue-700 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-blue-800"
+        >
+          Back to Meetings
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div>
       <MeetingDetail meeting={meeting} />
     </div>
+  );
+}
+
+export default function MeetingDetailPage(props: {
+  params: Promise<{ id: string }>;
+}) {
+  return (
+    <Suspense
+      fallback={
+        <div className="mt-10 text-center text-xl text-gray-700">
+          Loading meeting details...
+        </div>
+      }
+    >
+      <MeetingDetailContent params={props.params} />
+    </Suspense>
   );
 }
